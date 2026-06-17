@@ -81,6 +81,11 @@
 
     // ============ Init ============
     function init() {
+        pendo.initialize({
+            visitor: {
+                id: ''
+            }
+        });
         loadState();
         applyTheme();
         render();
