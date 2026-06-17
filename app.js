@@ -331,7 +331,16 @@
         });
         list.querySelectorAll('[data-delete-backlog]').forEach(btn => {
             btn.addEventListener('click', () => {
+                const backlogItem = state.backlog.find(i => i.id === btn.dataset.deleteBacklog);
                 showConfirm('Delete Backlog Item', `Delete "${getItemTitle(btn.dataset.deleteBacklog, true)}"?`, () => {
+                    if (backlogItem) {
+                        pendo.track('backlog_item_deleted', {
+                            category: backlogItem.category,
+                            priority: backlogItem.priority,
+                            points: backlogItem.points,
+                            tag_count: (backlogItem.tags || []).length
+                        });
+                    }
                     state.backlog = state.backlog.filter(i => i.id !== btn.dataset.deleteBacklog);
                     saveState();
                     renderBacklog();
@@ -507,6 +516,7 @@
 
     // ============ Drag & Drop ============
     let draggedId = null;
+    let searchDebounceTimer = null;
 
     function onDragStart(e) {
         draggedId = e.target.dataset.id;
@@ -540,10 +550,19 @@
 
         const item = state.items.find(i => i.id === itemId);
         if (item) {
+            const sourceColumn = item.column;
             item.column = newColumn;
             saveState();
             render();
             toast('Item moved');
+            pendo.track('item_moved', {
+                source_column: sourceColumn,
+                destination_column: newColumn,
+                item_category: item.category,
+                item_priority: item.priority,
+                item_points: item.points,
+                current_period: state.period
+            });
         }
     }
 
@@ -613,10 +632,28 @@
                 if (!item.status) item.status = 'todo';
             }
             toast('Item updated');
+            pendo.track('item_updated', {
+                category: data.category,
+                priority: data.priority,
+                points: data.points,
+                column: data.column,
+                tag_count: (data.tags || []).length,
+                has_owner: !!data.owner,
+                has_description: !!data.desc
+            });
         } else {
             data.id = 'item-' + Date.now();
             state.items.push(data);
             toast('Item added');
+            pendo.track('item_created', {
+                category: data.category,
+                priority: data.priority,
+                points: data.points,
+                column: data.column,
+                tag_count: (data.tags || []).length,
+                has_owner: !!data.owner,
+                has_description: !!data.desc
+            });
         }
 
         saveState();
@@ -629,6 +666,13 @@
         const item = state.items.find(i => i.id === id);
         if (!item) return;
         showConfirm('Delete Item', `Delete "${item.title}"?`, () => {
+            pendo.track('item_deleted', {
+                category: item.category,
+                priority: item.priority,
+                points: item.points,
+                column: item.column,
+                item_id: item.id
+            });
             state.items = state.items.filter(i => i.id !== id);
             saveState();
             render();
@@ -661,6 +705,14 @@
         saveState();
         render();
         toast('Moved to board');
+        pendo.track('backlog_item_promoted', {
+            category: item.category,
+            priority: item.priority,
+            points: item.points,
+            destination_column: item.column,
+            current_period: state.period,
+            backlog_remaining_count: state.backlog.length
+        });
     }
 
     // ============ Confirm Dialog ============
@@ -706,6 +758,12 @@
         a.click();
         URL.revokeObjectURL(url);
         toast('Exported!');
+        pendo.track('roadmap_exported_json', {
+            item_count: state.items.length,
+            backlog_count: state.backlog.length,
+            period: state.period,
+            total_story_points: state.items.reduce((s, i) => s + (i.points || 0), 0)
+        });
     }
 
     function importJSON(file) {
@@ -720,6 +778,12 @@
                 saveState();
                 render();
                 toast('Imported!');
+                pendo.track('roadmap_imported', {
+                    imported_item_count: (data.items || []).length,
+                    imported_backlog_count: (data.backlog || []).length,
+                    imported_period: data.period || 'unknown',
+                    file_name: file.name
+                });
             } catch (err) {
                 toast('Invalid JSON file');
             }
@@ -789,16 +853,31 @@
         $('#copyLinkBtn').addEventListener('click', () => {
             navigator.clipboard.writeText($('#shareLink').value);
             toast('Link copied!');
+            pendo.track('share_link_copied', {
+                share_url: window.location.href
+            });
         });
         $('#shareTwitter').addEventListener('click', () => {
             window.open(`https://twitter.com/intent/tweet?text=Check out my product roadmap&url=${encodeURIComponent(window.location.href)}`);
+            pendo.track('roadmap_shared_social', {
+                platform: 'twitter',
+                share_url: window.location.href
+            });
         });
         $('#shareLinkedin').addEventListener('click', () => {
             window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`);
+            pendo.track('roadmap_shared_social', {
+                platform: 'linkedin',
+                share_url: window.location.href
+            });
         });
         $('#shareSlack').addEventListener('click', () => {
             navigator.clipboard.writeText($('#shareLink').value);
             toast('Link copied — paste in Slack!');
+            pendo.track('roadmap_shared_social', {
+                platform: 'slack',
+                share_url: window.location.href
+            });
         });
 
         // Settings
@@ -815,6 +894,10 @@
             state.title = e.target.value;
             $('#roadmapTitle').textContent = state.title;
             saveState();
+            pendo.track('roadmap_renamed', {
+                title_length: state.title.length,
+                rename_source: 'settings_modal'
+            });
         });
         $('#settingView').addEventListener('change', (e) => {
             state.period = e.target.value;
@@ -828,6 +911,9 @@
         });
         $('#clearDataBtn').addEventListener('click', () => {
             showConfirm('Clear All Data', 'This will delete all items and reset to defaults. Continue?', () => {
+                const itemsClearedCount = state.items.length;
+                const backlogClearedCount = state.backlog.length;
+                const totalPointsCleared = state.items.reduce((s, i) => s + (i.points || 0), 0);
                 localStorage.removeItem('roadmapflow-data');
                 state.items = JSON.parse(JSON.stringify(SAMPLE_ITEMS));
                 state.backlog = JSON.parse(JSON.stringify(SAMPLE_BACKLOG));
@@ -836,6 +922,11 @@
                 saveState();
                 render();
                 toast('Data cleared');
+                pendo.track('data_cleared', {
+                    items_cleared_count: itemsClearedCount,
+                    backlog_cleared_count: backlogClearedCount,
+                    total_points_cleared: totalPointsCleared
+                });
             });
         });
 
@@ -843,6 +934,24 @@
         $('#searchInput').addEventListener('input', (e) => {
             state.searchQuery = e.target.value;
             render();
+
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                if (state.searchQuery) {
+                    const boardResults = getFilteredItems().length;
+                    const backlogResults = state.backlog.filter(i => {
+                        const q = state.searchQuery.toLowerCase();
+                        return i.title.toLowerCase().includes(q) || (i.desc || '').toLowerCase().includes(q);
+                    }).length;
+                    pendo.track('search_executed', {
+                        query_length: state.searchQuery.length,
+                        board_results_count: boardResults,
+                        backlog_results_count: backlogResults,
+                        total_items: state.items.length + state.backlog.length,
+                        current_view: state.view
+                    });
+                }
+            }, 500);
         });
 
         // Keyboard shortcuts
@@ -869,6 +978,10 @@
                 state.title = newTitle.trim();
                 $('#roadmapTitle').textContent = state.title;
                 saveState();
+                pendo.track('roadmap_renamed', {
+                    title_length: state.title.length,
+                    rename_source: 'inline_edit'
+                });
             }
         });
 
@@ -902,7 +1015,12 @@
 
         // Export PNG
         $('#exportBtn').addEventListener('click', () => {
-            // Simple print-to-PDF approach
+            pendo.track('roadmap_exported_print', {
+                item_count: state.items.length,
+                current_view: state.view,
+                current_period: state.period,
+                total_story_points: state.items.reduce((s, i) => s + (i.points || 0), 0)
+            });
             window.print();
         });
     }
