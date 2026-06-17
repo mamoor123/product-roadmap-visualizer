@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoadmapFlow — Product Roadmap Visualizer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <!-- App Shell -->
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon"><i class="fas fa-route"></i></div>
+                <div class="brand-text">
+                    <span class="brand-name">RoadmapFlow</span>
+                    <span class="brand-sub">Product Roadmap</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-btn active" data-view="board" title="Board View">
+                    <i class="fas fa-columns"></i><span>Board</span>
+                </button>
+                <button class="nav-btn" data-view="timeline" title="Timeline View">
+                    <i class="fas fa-timeline"></i><span>Timeline</span>
+                </button>
+                <button class="nav-btn" data-view="backlog" title="Backlog">
+                    <i class="fas fa-list-check"></i><span>Backlog</span>
+                </button>
+                <button class="nav-btn" data-view="analytics" title="Analytics">
+                    <i class="fas fa-chart-pie"></i><span>Analytics</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="theme-switcher">
+                    <button class="theme-btn" id="themeToggle" title="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+                <div class="sidebar-actions">
+                    <button class="action-btn" id="exportBtn" title="Export Roadmap">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="action-btn" id="shareBtn" title="Share Roadmap">
+                        <i class="fas fa-share-nodes"></i>
+                    </button>
+                    <button class="action-btn" id="settingsBtn" title="Settings">
+                        <i class="fas fa-gear"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="hamburger" id="menuBtn"><i class="fas fa-bars"></i></button>
+                    <div class="roadmap-title-wrap">
+                        <h1 class="roadmap-title" id="roadmapTitle">Product Roadmap 2025</h1>
+                        <button class="edit-title-btn" id="editTitleBtn"><i class="fas fa-pen"></i></button>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <div class="search-box" id="searchBox">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Search items...">
+                        <kbd>Ctrl+K</kbd>
+                    </div>
+                    <div class="view-switcher">
+                        <button class="vs-btn active" data-period="quarters">Quarters</button>
+                        <button class="vs-btn" data-period="months">Months</button>
+                        <button class="vs-btn" data-period="now-next-later">Now / Next / Later</button>
+                    </div>
+                    <button class="add-btn" id="addItemBtn">
+                        <i class="fas fa-plus"></i><span>Add Item</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Stats Strip -->
+            <div class="stats-strip">
+                <div class="stat">
+                    <span class="stat-val" id="statTotal">0</span>
+                    <span class="stat-lbl">Total Items</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-val" id="statPoints">0</span>
+                    <span class="stat-lbl">Story Points</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-val" id="statHigh">0</span>
+                    <span class="stat-lbl">High Priority</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-val" id="statDone">0</span>
+                    <span class="stat-lbl">Completed</span>
+                </div>
+            </div>
+
+            <!-- Board View -->
+            <section class="view active" id="view-board">
+                <div class="board" id="board">
+                    <!-- Columns rendered by JS -->
+                </div>
+            </section>
+
+            <!-- Timeline View -->
+            <section class="view" id="view-timeline">
+                <div class="timeline" id="timeline"></div>
+            </section>
+
+            <!-- Backlog View -->
+            <section class="view" id="view-backlog">
+                <div class="backlog-header">
+                    <h2>Backlog</h2>
+                    <button class="add-btn small" id="addBacklogBtn">
+                        <i class="fas fa-plus"></i><span>Add to Backlog</span>
+                    </button>
+                </div>
+                <div class="backlog-list" id="backlogList"></div>
+            </section>
+
+            <!-- Analytics View -->
+            <section class="view" id="view-analytics">
+                <div class="analytics-grid" id="analyticsGrid"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="itemModal">
+        <div class="modal">
+            <div class="modal-head">
+                <h2 id="modalTitle">Add Roadmap Item</h2>
+                <button class="modal-close" id="modalClose"><i class="fas fa-xmark"></i></button>
+            </div>
+            <form id="itemForm" class="modal-body">
+                <input type="hidden" id="itemId">
+                <div class="field">
+                    <label>Title <span class="req">*</span></label>
+                    <input type="text" id="itemTitle" placeholder="e.g., User Authentication" required>
+                </div>
+                <div class="field">
+                    <label>Description</label>
+                    <textarea id="itemDesc" rows="3" placeholder="Describe the feature..."></textarea>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label>Category</label>
+                        <select id="itemCategory">
+                            <option value="feature">🚀 Feature</option>
+                            <option value="enhancement">✨ Enhancement</option>
+                            <option value="bugfix">🐛 Bug Fix</option>
+                            <option value="research">🔬 Research</option>
+                            <option value="infrastructure">🏗️ Infrastructure</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Priority</label>
+                        <select id="itemPriority">
+                            <option value="high">🔴 High</option>
+                            <option value="medium" selected>🟡 Medium</option>
+                            <option value="low">🟢 Low</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label>Story Points</label>
+                        <input type="number" id="itemPoints" min="1" max="21" value="3">
+                    </div>
+                    <div class="field">
+                        <label>Column</label>
+                        <select id="itemColumn"></select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label>Tags</label>
+                        <input type="text" id="itemTags" placeholder="frontend, api, ux">
+                    </div>
+                    <div class="field">
+                        <label>Owner</label>
+                        <input type="text" id="itemOwner" placeholder="e.g., Alice">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="modalCancel">Cancel</button>
+                    <button type="submit" class="btn-save"><i class="fas fa-check"></i> Save Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal-overlay" id="shareModal">
+        <div class="modal">
+            <div class="modal-head">
+                <h2>Share Roadmap</h2>
+                <button class="modal-close" id="shareModalClose"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="modal-body share-body">
+                <div class="share-link-wrap">
+                    <input type="text" id="shareLink" readonly>
+                    <button class="btn-copy" id="copyLinkBtn"><i class="fas fa-copy"></i> Copy</button>
+                </div>
+                <div class="share-socials">
+                    <button class="social-btn twitter" id="shareTwitter"><i class="fab fa-x-twitter"></i> Twitter</button>
+                    <button class="social-btn linkedin" id="shareLinkedin"><i class="fab fa-linkedin"></i> LinkedIn</button>
+                    <button class="social-btn slack" id="shareSlack"><i class="fab fa-slack"></i> Slack</button>
+                </div>
+                <div class="field">
+                    <label>Embed Code</label>
+                    <textarea id="embedCode" readonly rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <div class="modal-head">
+                <h2>Settings</h2>
+                <button class="modal-close" id="settingsModalClose"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="field">
+                    <label>Roadmap Name</label>
+                    <input type="text" id="settingName" value="Product Roadmap 2025">
+                </div>
+                <div class="field">
+                    <label>Default View</label>
+                    <select id="settingView">
+                        <option value="quarters">Quarters</option>
+                        <option value="months">Months</option>
+                        <option value="now-next-later">Now / Next / Later</option>
+                    </select>
+                </div>
+                <div class="settings-danger">
+                    <h3>Data Management</h3>
+                    <button class="btn-export" id="exportJsonBtn"><i class="fas fa-download"></i> Export JSON</button>
+                    <button class="btn-import" id="importJsonBtn"><i class="fas fa-upload"></i> Import JSON</button>
+                    <input type="file" id="importFile" accept=".json" hidden>
+                    <button class="btn-danger" id="clearDataBtn"><i class="fas fa-trash"></i> Clear All Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMsg">Saved!</span>
+    </div>
+
+    <!-- Confirm Dialog -->
+    <div class="modal-overlay" id="confirmDialog">
+        <div class="modal confirm-modal">
+            <div class="modal-head">
+                <h2 id="confirmTitle">Confirm</h2>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMsg">Are you sure?</p>
+                <div class="modal-actions">
+                    <button class="btn-cancel" id="confirmNo">Cancel</button>
+                    <button class="btn-danger" id="confirmYes">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
