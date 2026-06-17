@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoadmapFlow — Demo</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Demo-specific styles */
+        .demo-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(6px);
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .demo-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .demo-welcome {
+            text-align: center;
+            color: #fff;
+            animation: demoPulse 2s ease infinite;
+        }
+
+        .demo-welcome h1 {
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .demo-welcome p {
+            font-size: 18px;
+            color: #9aa0b0;
+            margin-bottom: 24px;
+        }
+
+        .demo-start-btn {
+            padding: 14px 36px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .demo-start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(99,102,241,0.5);
+        }
+
+        @keyframes demoPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        /* Animated cursor */
+        .demo-cursor {
+            position: fixed;
+            width: 24px;
+            height: 24px;
+            pointer-events: none;
+            z-index: 9999;
+            transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                        top 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .demo-cursor.visible {
+            opacity: 1;
+        }
+
+        .demo-cursor svg {
+            width: 24px;
+            height: 24px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        /* Click ripple */
+        .demo-click-ripple {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid #6366f1;
+            pointer-events: none;
+            z-index: 9998;
+            animation: clickRipple 0.6s ease forwards;
+        }
+
+        @keyframes clickRipple {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        /* Tooltip */
+        .demo-tooltip {
+            position: fixed;
+            background: #1c1f2e;
+            color: #e8eaed;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            pointer-events: none;
+            z-index: 9997;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            border: 1px solid #2a2d3e;
+            max-width: 300px;
+            transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                        top 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .demo-tooltip.visible {
+            opacity: 1;
+        }
+
+        .demo-tooltip .tt-step {
+            font-size: 11px;
+            color: #6366f1;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        /* Highlight ring */
+        .demo-highlight {
+            position: fixed;
+            border: 3px solid #6366f1;
+            border-radius: 12px;
+            pointer-events: none;
+            z-index: 9996;
+            box-shadow: 0 0 20px rgba(99,102,241,0.3);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .demo-highlight.visible {
+            opacity: 1;
+        }
+
+        /* Progress bar */
+        .demo-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #6366f1, #a855f7);
+            z-index: 10000;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(99,102,241,0.5);
+        }
+
+        /* Status text */
+        .demo-status {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(28,31,46,0.95);
+            color: #e8eaed;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            z-index: 10000;
+            border: 1px solid #2a2d3e;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            transition: opacity 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .demo-status.visible {
+            opacity: 1;
+        }
+
+        .demo-status .step {
+            color: #6366f1;
+            font-weight: 700;
+        }
+
+        /* Completion overlay */
+        .demo-complete {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            z-index: 10001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .demo-complete.show {
+            display: flex;
+        }
+
+        .demo-complete-content {
+            text-align: center;
+            color: #fff;
+        }
+
+        .demo-complete-content h2 {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #22c55e, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .demo-complete-content p {
+            color: #9aa0b0;
+            font-size: 16px;
+            margin-bottom: 24px;
+        }
+
+        .demo-replay-btn {
+            padding: 12px 28px;
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .demo-replay-btn:hover {
+            background: #818cf8;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Overlay (Welcome) -->
+    <div class="demo-overlay" id="demoOverlay">
+        <div class="demo-welcome">
+            <h1>RoadmapFlow</h1>
+            <p>Product Roadmap Visualizer — Interactive Demo</p>
+            <button class="demo-start-btn" id="startDemoBtn">
+                <i class="fas fa-play"></i> Start Demo
+            </button>
+        </div>
+    </div>
+
+    <!-- Demo Cursor -->
+    <div class="demo-cursor" id="demoCursor">
+        <svg viewBox="0 0 24 24" fill="none">
+            <path d="M5 3L19 12L12 13L9 20L5 3Z" fill="#6366f1" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+    </div>
+
+    <!-- Demo Tooltip -->
+    <div class="demo-tooltip" id="demoTooltip">
+        <div class="tt-step" id="ttStep">Step 1/11</div>
+        <div id="ttText">Welcome to RoadmapFlow</div>
+    </div>
+
+    <!-- Demo Highlight -->
+    <div class="demo-highlight" id="demoHighlight"></div>
+
+    <!-- Demo Progress -->
+    <div class="demo-progress" id="demoProgress" style="width: 0%"></div>
+
+    <!-- Demo Status -->
+    <div class="demo-status" id="demoStatus">
+        <span class="step">Step 1/11:</span> Welcome to RoadmapFlow
+    </div>
+
+    <!-- Demo Complete -->
+    <div class="demo-complete" id="demoComplete">
+        <div class="demo-complete-content">
+            <h2>Demo Complete!</h2>
+            <p>All features demonstrated successfully. Ready to record!</p>
+            <button class="demo-replay-btn" id="replayBtn"><i class="fas fa-redo"></i> Watch Again</button>
+        </div>
+    </div>
+
+    <!-- ============ APP SHELL ============ -->
+    <div class="app">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon"><i class="fas fa-route"></i></div>
+                <div class="brand-text">
+                    <span class="brand-name">RoadmapFlow</span>
+                    <span class="brand-sub">Product Roadmap</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-btn active" data-view="board" title="Board View">
+                    <i class="fas fa-columns"></i><span>Board</span>
+                </button>
+                <button class="nav-btn" data-view="timeline" title="Timeline View">
+                    <i class="fas fa-timeline"></i><span>Timeline</span>
+                </button>
+                <button class="nav-btn" data-view="backlog" title="Backlog">
+                    <i class="fas fa-list-check"></i><span>Backlog</span>
+                </button>
+                <button class="nav-btn" data-view="analytics" title="Analytics">
+                    <i class="fas fa-chart-pie"></i><span>Analytics</span>
+                </button>
+            </nav>
+            <div class="sidebar-bottom">
+                <div class="theme-switcher">
+                    <button class="theme-btn" id="themeToggle" title="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+                <div class="sidebar-actions">
+                    <button class="action-btn" id="exportBtn" title="Export Roadmap">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="action-btn" id="shareBtn" title="Share Roadmap">
+                        <i class="fas fa-share-nodes"></i>
+                    </button>
+                    <button class="action-btn" id="settingsBtn" title="Settings">
+                        <i class="fas fa-gear"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="hamburger" id="menuBtn"><i class="fas fa-bars"></i></button>
+                    <div class="roadmap-title-wrap">
+                        <h1 class="roadmap-title" id="roadmapTitle">Product Roadmap 2025</h1>
+                        <button class="edit-title-btn" id="editTitleBtn"><i class="fas fa-pen"></i></button>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <div class="search-box" id="searchBox">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Search items...">
+                        <kbd>Ctrl+K</kbd>
+                    </div>
+                    <div class="view-switcher">
+                        <button class="vs-btn active" data-period="quarters">Quarters</button>
+                        <button class="vs-btn" data-period="months">Months</button>
+                        <button class="vs-btn" data-period="now-next-later">Now / Next / Later</button>
+                    </div>
+                    <button class="add-btn" id="addItemBtn">
+                        <i class="fas fa-plus"></i><span>Add Item</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="stats-strip">
+                <div class="stat">
+                    <span class="stat-val" id="statTotal">0</span>
+                    <span class="stat-lbl">Total Items</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-val" id="statPoints">0</span>
+                    <span class="stat-lbl">Story Points</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-val" id="statHigh">0</span>
+                    <span class="stat-lbl">High Priority</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-val" id="statDone">0</span>
+                    <span class="stat-lbl">Completed</span>
+                </div>
+            </div>
+
+            <section class="view active" id="view-board">
+                <div class="board" id="board"></div>
+            </section>
+
+            <section class="view" id="view-timeline">
+                <div class="timeline" id="timeline"></div>
+            </section>
+
+            <section class="view" id="view-backlog">
+                <div class="backlog-header">
+                    <h2>Backlog</h2>
+                    <button class="add-btn small" id="addBacklogBtn">
+                        <i class="fas fa-plus"></i><span>Add to Backlog</span>
+                    </button>
+                </div>
+                <div class="backlog-list" id="backlogList"></div>
+            </section>
+
+            <section class="view" id="view-analytics">
+                <div class="analytics-grid" id="analyticsGrid"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="itemModal">
+        <div class="modal">
+            <div class="modal-head">
+                <h2 id="modalTitle">Add Roadmap Item</h2>
+                <button class="modal-close" id="modalClose"><i class="fas fa-xmark"></i></button>
+            </div>
+            <form id="itemForm" class="modal-body">
+                <input type="hidden" id="itemId">
+                <div class="field">
+                    <label>Title <span class="req">*</span></label>
+                    <input type="text" id="itemTitle" placeholder="e.g., User Authentication" required>
+                </div>
+                <div class="field">
+                    <label>Description</label>
+                    <textarea id="itemDesc" rows="3" placeholder="Describe the feature..."></textarea>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label>Category</label>
+                        <select id="itemCategory">
+                            <option value="feature">🚀 Feature</option>
+                            <option value="enhancement">✨ Enhancement</option>
+                            <option value="bugfix">🐛 Bug Fix</option>
+                            <option value="research">🔬 Research</option>
+                            <option value="infrastructure">🏗️ Infrastructure</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Priority</label>
+                        <select id="itemPriority">
+                            <option value="high">🔴 High</option>
+                            <option value="medium" selected>🟡 Medium</option>
+                            <option value="low">🟢 Low</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label>Story Points</label>
+                        <input type="number" id="itemPoints" min="1" max="21" value="3">
+                    </div>
+                    <div class="field">
+                        <label>Column</label>
+                        <select id="itemColumn"></select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label>Tags</label>
+                        <input type="text" id="itemTags" placeholder="frontend, api, ux">
+                    </div>
+                    <div class="field">
+                        <label>Owner</label>
+                        <input type="text" id="itemOwner" placeholder="e.g., Alice">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="modalCancel">Cancel</button>
+                    <button type="submit" class="btn-save"><i class="fas fa-check"></i> Save Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal-overlay" id="shareModal">
+        <div class="modal">
+            <div class="modal-head">
+                <h2>Share Roadmap</h2>
+                <button class="modal-close" id="shareModalClose"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="modal-body share-body">
+                <div class="share-link-wrap">
+                    <input type="text" id="shareLink" readonly>
+                    <button class="btn-copy" id="copyLinkBtn"><i class="fas fa-copy"></i> Copy</button>
+                </div>
+                <div class="share-socials">
+                    <button class="social-btn twitter" id="shareTwitter"><i class="fab fa-x-twitter"></i> Twitter</button>
+                    <button class="social-btn linkedin" id="shareLinkedin"><i class="fab fa-linkedin"></i> LinkedIn</button>
+                    <button class="social-btn slack" id="shareSlack"><i class="fab fa-slack"></i> Slack</button>
+                </div>
+                <div class="field">
+                    <label>Embed Code</label>
+                    <textarea id="embedCode" readonly rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <div class="modal-head">
+                <h2>Settings</h2>
+                <button class="modal-close" id="settingsModalClose"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="field">
+                    <label>Roadmap Name</label>
+                    <input type="text" id="settingName" value="Product Roadmap 2025">
+                </div>
+                <div class="field">
+                    <label>Default View</label>
+                    <select id="settingView">
+                        <option value="quarters">Quarters</option>
+                        <option value="months">Months</option>
+                        <option value="now-next-later">Now / Next / Later</option>
+                    </select>
+                </div>
+                <div class="settings-danger">
+                    <h3>Data Management</h3>
+                    <button class="btn-export" id="exportJsonBtn"><i class="fas fa-download"></i> Export JSON</button>
+                    <button class="btn-import" id="importJsonBtn"><i class="fas fa-upload"></i> Import JSON</button>
+                    <input type="file" id="importFile" accept=".json" hidden>
+                    <button class="btn-danger" id="clearDataBtn"><i class="fas fa-trash"></i> Clear All Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMsg">Saved!</span>
+    </div>
+
+    <!-- Confirm Dialog -->
+    <div class="modal-overlay" id="confirmDialog">
+        <div class="modal confirm-modal">
+            <div class="modal-head">
+                <h2 id="confirmTitle">Confirm</h2>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMsg">Are you sure?</p>
+                <div class="modal-actions">
+                    <button class="btn-cancel" id="confirmNo">Cancel</button>
+                    <button class="btn-danger" id="confirmYes">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+    // ============ DEMO ENGINE ============
+    (function() {
+        const cursor = document.getElementById('demoCursor');
+        const tooltip = document.getElementById('demoTooltip');
+        const ttStep = document.getElementById('ttStep');
+        const ttText = document.getElementById('ttText');
+        const highlight = document.getElementById('demoHighlight');
+        const progress = document.getElementById('demoProgress');
+        const status = document.getElementById('demoStatus');
+        const overlay = document.getElementById('demoOverlay');
+        const complete = document.getElementById('demoComplete');
+
+        function sleep(ms) {
+            return new Promise(r => setTimeout(r, ms));
+        }
+
+        function moveTo(el, tooltipMsg, stepNum, totalSteps) {
+            return new Promise(async (resolve) => {
+                const rect = el.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+
+                // Position highlight
+                highlight.style.left = (rect.left - 6) + 'px';
+                highlight.style.top = (rect.top - 6) + 'px';
+                highlight.style.width = (rect.width + 12) + 'px';
+                highlight.style.height = (rect.height + 12) + 'px';
+                highlight.classList.add('visible');
+
+                // Position cursor
+                cursor.style.left = x + 'px';
+                cursor.style.top = y + 'px';
+                cursor.classList.add('visible');
+
+                // Position tooltip
+                const tx = Math.min(x + 20, window.innerWidth - 320);
+                const ty = Math.max(y - 60, 10);
+                tooltip.style.left = tx + 'px';
+                tooltip.style.top = ty + 'px';
+                ttStep.textContent = `Step ${stepNum}/${totalSteps}`;
+                ttText.textContent = tooltipMsg;
+                tooltip.classList.add('visible');
+
+                // Update progress
+                progress.style.width = ((stepNum / totalSteps) * 100) + '%';
+
+                // Update status
+                status.innerHTML = `<span class="step">Step ${stepNum}/${totalSteps}:</span> ${tooltipMsg}`;
+                status.classList.add('visible');
+
+                await sleep(1200);
+                resolve();
+            });
+        }
+
+        function clickAt(el) {
+            return new Promise(async (resolve) => {
+                const rect = el.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+
+                // Ripple effect
+                const ripple = document.createElement('div');
+                ripple.className = 'demo-click-ripple';
+                ripple.style.left = (x - 20) + 'px';
+                ripple.style.top = (y - 20) + 'px';
+                document.body.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+
+                // Actually click
+                el.click();
+                await sleep(800);
+                resolve();
+            });
+        }
+
+        function hideAll() {
+            cursor.classList.remove('visible');
+            tooltip.classList.remove('visible');
+            highlight.classList.remove('visible');
+            status.classList.remove('visible');
+        }
+
+        const TOTAL_STEPS = 11;
+
+        async function runDemo() {
+            overlay.classList.add('hidden');
+            complete.classList.remove('show');
+            hideAll();
+            await sleep(500);
+
+            // Step 1: Show the board
+            const boardEl = document.getElementById('board');
+            await moveTo(boardEl, 'This is the Board view — a Kanban-style roadmap organized by quarters', 1, TOTAL_STEPS);
+            await sleep(1500);
+
+            // Step 2: Highlight a card
+            const firstCard = document.querySelector('.card');
+            if (firstCard) {
+                await moveTo(firstCard, 'Each card shows title, priority, category, story points, and owner', 2, TOTAL_STEPS);
+                await sleep(1500);
+            }
+
+            // Step 3: Switch to Now/Next/Later
+            const nnlBtn = document.querySelector('[data-period="now-next-later"]');
+            await moveTo(nnlBtn, 'Switch to Now / Next / Later view for simplified planning', 3, TOTAL_STEPS);
+            await clickAt(nnlBtn);
+            await sleep(2000);
+
+            // Step 4: Switch to Months
+            const monthsBtn = document.querySelector('[data-period="months"]');
+            await moveTo(monthsBtn, 'Or switch to Months view for granular scheduling', 4, TOTAL_STEPS);
+            await clickAt(monthsBtn);
+            await sleep(2000);
+
+            // Step 5: Back to Quarters
+            const qBtn = document.querySelector('[data-period="quarters"]');
+            await moveTo(qBtn, 'Back to Quarters view — the default planning perspective', 5, TOTAL_STEPS);
+            await clickAt(qBtn);
+            await sleep(1500);
+
+            // Step 6: Timeline view
+            const timelineBtn = document.querySelector('[data-view="timeline"]');
+            await moveTo(timelineBtn, 'Timeline view shows items in chronological order', 6, TOTAL_STEPS);
+            await clickAt(timelineBtn);
+            await sleep(2000);
+
+            // Step 7: Analytics view
+            const analyticsBtn = document.querySelector('[data-view="analytics"]');
+            await moveTo(analyticsBtn, 'Analytics view with charts for priority, category, and team workload', 7, TOTAL_STEPS);
+            await clickAt(analyticsBtn);
+            await sleep(2500);
+
+            // Step 8: Backlog view
+            const backlogBtn = document.querySelector('[data-view="backlog"]');
+            await moveTo(backlogBtn, 'Backlog view to manage items before adding to the roadmap', 8, TOTAL_STEPS);
+            await clickAt(backlogBtn);
+            await sleep(2000);
+
+            // Step 9: Back to board and add item
+            const boardBtn = document.querySelector('[data-view="board"]');
+            await moveTo(boardBtn, 'Back to Board view', 9, TOTAL_STEPS);
+            await clickAt(boardBtn);
+            await sleep(1000);
+
+            const addBtn = document.getElementById('addItemBtn');
+            await moveTo(addBtn, 'Click Add Item to create a new roadmap entry', 10, TOTAL_STEPS);
+            await clickAt(addBtn);
+            await sleep(2000);
+
+            // Step 10: Close modal
+            const closeBtn = document.getElementById('modalClose');
+            await moveTo(closeBtn, 'Full form with category, priority, story points, tags, and owner', 11, TOTAL_STEPS);
+            await clickAt(closeBtn);
+            await sleep(1000);
+
+            // Done
+            hideAll();
+            complete.classList.add('show');
+        }
+
+        // Start button
+        document.getElementById('startDemoBtn').addEventListener('click', runDemo);
+
+        // Replay button
+        document.getElementById('replayBtn').addEventListener('click', () => {
+            complete.classList.remove('show');
+            setTimeout(runDemo, 500);
+        });
+    })();
+    </script>
+</body>
+</html>
