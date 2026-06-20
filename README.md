@@ -2,7 +2,10 @@
 
 A modern, interactive product roadmap planning tool built with vanilla HTML, CSS, and JavaScript.
 
-![RoadmapFlow Screenshot](https://via.placeholder.com/800x400/0f1117/6366f1?text=RoadmapFlow)
+![RoadmapFlow Dashboard](roadmapflow-novus-dashboard.png)
+![RoadmapFlow Board View](roadmapflow-board-view.png)
+![RoadmapFlow Analytics](roadmapflow-analytics.png)
+![RoadmapFlow Light Theme](roadmapflow-light-theme.png)
 
 ## ✨ Features
 
